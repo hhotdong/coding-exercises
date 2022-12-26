@@ -5,42 +5,29 @@ using namespace std;
 
 const string kSpeakableWords[] = { "aya", "ye", "woo", "ma" };
 
+int SizeOfFirstSpeakableWordIn(string word)
+{
+    int compCnt = sizeof(kSpeakableWords) / sizeof(kSpeakableWords[0]);
+    for (int swi = 0; swi < compCnt; ++swi)
+    {
+        if (word.find(kSpeakableWords[swi]) == 0)
+            return kSpeakableWords[swi].size();
+    }
+    return -1;
+}
+
 bool IsSpeakable(string word)
 {
-    int wLen = word.size();
-    
-    while (true)
+    string::iterator it = word.begin();
+    while (it != word.end())
     {
-        bool foundAtLeastOneWordMatched = false;
-        int compCnt = sizeof(kSpeakableWords) / sizeof(kSpeakableWords[0]);
-        for (int swi = 0; swi < compCnt; ++swi)
-        {
-            int swLen = kSpeakableWords[swi].size();
-            if (wLen < swLen)
-                continue;
-            
-            bool matched = true;
-            for (int wi = 0; wi < swLen; ++wi)
-            {
-                if (word[wi] != kSpeakableWords[swi][wi])
-                {
-                    matched = false;
-                    break;
-                }
-            }
-            
-            if (matched == false)
-                continue;
-            
-            foundAtLeastOneWordMatched = true;
-            word.erase(0, swLen);
-        }
-        
-        if (foundAtLeastOneWordMatched == false)
-            break;
+        int speakableWordSize = SizeOfFirstSpeakableWordIn(word.substr(it - word.begin()));
+        if (speakableWordSize == -1)
+            return false;
+
+        it += speakableWordSize;
     }
-    
-    return word.size() == 0;
+    return true;
 }
 
 int solution(vector<string> babbling) {
