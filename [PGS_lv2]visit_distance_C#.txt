@@ -2,15 +2,68 @@
 using System;
 using System.Collections.Generic;
 
+public class Movement
+{
+    public Coordinate From;
+    public Coordinate To;
+    
+    public Movement(Coordinate from, Coordinate to)
+    {
+        From = from;
+        To   = to;
+    }
+    
+    public override bool Equals(object other)
+    {
+        Movement otherMove = other as Movement;
+        if (ReferenceEquals(otherMove, null))
+            return false;
+        return this == otherMove;
+    }
+    
+    public static bool operator==(Movement lhs, Movement rhs)
+    {
+        bool lhsIsNull = ReferenceEquals(lhs, null);
+        bool rhsIsNull = ReferenceEquals(rhs, null);
+        if (lhsIsNull && rhsIsNull)
+            return true;
+        
+        if (lhsIsNull || rhsIsNull)
+            return false;
+        
+        bool equalsExactly  = (lhs.From == rhs.From) && (lhs.To == rhs.To);
+        bool equalsInversly = (lhs.From == rhs.To)   && (lhs.To == rhs.From);
+        return equalsExactly || equalsInversly;
+    }
+    
+    public static bool operator!=(Movement lhs, Movement rhs)
+    {
+        return !(lhs == rhs);
+    }
+    
+    public override int GetHashCode()
+    {
+        return From.X + From.Y + To.X + To.Y;
+    }
+}
+
 public struct Coordinate
 {
     public int X;
     public int Y;
-
+    
     public Coordinate(int x, int y)
     {
         X = x;
         Y = y;
+    }
+    
+    public override bool Equals(object other)
+    {
+        if (ReferenceEquals(other, null) || (other is Coordinate) == false)
+            return false;
+        Coordinate otherCoord = (Coordinate)other;
+        return this == otherCoord;
     }
     
     public static bool operator==(Coordinate lhs, Coordinate rhs)
@@ -20,14 +73,7 @@ public struct Coordinate
     
     public static bool operator!=(Coordinate lhs, Coordinate rhs)
     {
-        return (lhs == rhs) == false;
-    }
-    
-    public override bool Equals(object o)
-    {
-        if ((o is Coordinate) == false)
-            return false;
-        return this == (Coordinate)o;
+        return !(lhs == rhs);
     }
     
     public override int GetHashCode()
@@ -36,98 +82,24 @@ public struct Coordinate
     }
 }
 
-public class Edge
-{   
-    public Coordinate StartCoord;
-    public Coordinate EndCoord;
-    
-    public Edge(int startX, int startY, int endX, int endY)
-    {
-        StartCoord = new Coordinate(startX, startY);
-        EndCoord   = new Coordinate(endX  , endY);
-    }
-    
-    public static bool operator==(Edge lhs, Edge rhs)
-    {
-        return lhs.Equals(rhs);
-    }
-    
-    public static bool operator!=(Edge lhs, Edge rhs)
-    {
-        return lhs.Equals(rhs) == false;
-    }
-    
-    public override bool Equals(object o)
-    {
-        if ((o is Edge) == false)
-            return false;
-        return this.Equals((Edge)o);
-    }
-    
-    public bool Equals(Edge other)
-    {
-        return (this.StartCoord == other.StartCoord && this.EndCoord == other.EndCoord) 
-            || (this.StartCoord == other.EndCoord && this.EndCoord == other.StartCoord);
-    }
-    
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(this.StartCoord, this.EndCoord);
-    }
-}
-
 public class Solution {
     public int solution(string dirs) {
-        int answer = 0;
-        Coordinate prevCoord = new Coordinate(0, 0);
-        Coordinate curCoord  = new Coordinate(0, 0);
-        List<Edge> edges = new List<Edge>();
+        HashSet<Movement> movements = new HashSet<Movement>();
+        Coordinate curCoord = new Coordinate(0, 0);
         
         for (int i = 0; i < dirs.Length; i++)
         {
-            prevCoord = curCoord;
-            
+            Coordinate prevCoord = curCoord;
             char ch = dirs[i];
-            if (ch == 'U')
-            {
-                if (curCoord.Y < 5)
-                    ++curCoord.Y;
-            }
-            else if (ch == 'D')
-            {
-                if (curCoord.Y > -5)
-                    --curCoord.Y;
-            }
-            else if (ch == 'R')
-            {
-                if (curCoord.X < 5)
-                    ++curCoord.X;
-            }
-            else if (ch == 'L')
-            {
-                if (curCoord.X > -5)
-                    --curCoord.X;
-            }
+            if      (ch == 'U' && curCoord.Y <  5) curCoord.Y++;
+            else if (ch == 'D' && curCoord.Y > -5) curCoord.Y--;
+            else if (ch == 'L' && curCoord.X > -5) curCoord.X--;
+            else if (ch == 'R' && curCoord.X <  5) curCoord.X++;
             
-            if (prevCoord.X != curCoord.X || prevCoord.Y != curCoord.Y)
-            {
-                var newEdge = new Edge(prevCoord.X, prevCoord.Y, curCoord.X, curCoord.Y);
-                bool isDuplicate = false;
-                    
-                for (int j = 0; j < edges.Count; j++)
-                {
-                    if (edges[j].Equals(newEdge))
-                    {
-                        isDuplicate = true;
-                        break;
-                    }
-                }
-                
-                if (isDuplicate == false)
-                    edges.Add(newEdge);
-            }
+            if (prevCoord != curCoord)
+                movements.Add(new Movement(prevCoord, curCoord));
         }
-        answer = edges.Count;
+        int answer = movements.Count;
         return answer;
     }
 }
